@@ -30,10 +30,12 @@ fresh = head . removeAll variables
 
 ------------------------- Assignment 1: Simple types
 
-data Type 
+data Type = 
+    Base 
+  | (:->) Type Type
+  deriving Eq
 
-{-
-
+-- {
 nice :: Type -> String
 nice Base = "o"
 nice (Base :-> b) = "o -> " ++ nice b
@@ -47,8 +49,7 @@ type1 =  Base :-> Base
 
 type2 :: Type
 type2 = (Base :-> Base) :-> (Base :-> Base)
-
--}
+-- }
 
 -- - - - - - - - - - - -- Terms
 
@@ -56,10 +57,10 @@ type Var = String
 
 data Term =
     Variable Var
-  | Lambda   Var  Term
+  | Lambda   Var Type Term
   | Apply    Term Term
 
-{-
+--{
 
 pretty :: Term -> String
 pretty = f 0
@@ -71,20 +72,20 @@ pretty = f 0
 instance Show Term where
   show = pretty
 
--}
+--}
 
 -- - - - - - - - - - - -- Numerals
 
-{-
+--{
 numeral :: Int -> Term
-numeral i = Lambda "f" (Lambda "x" (numeral' i))
+numeral i = Lambda "f" (Base :-> Base) (Lambda "x" (Base) (numeral' i))
   where
     numeral' i
       | i <= 0    = Variable "x"
       | otherwise = Apply (Variable "f") (numeral' (i-1))
--}
+--}
 
-{-
+--{
 sucterm :: Term
 sucterm =
     Lambda "m" type2 (
@@ -141,14 +142,14 @@ example6 = (numeral 2 `add` numeral 3) `mul` (numeral 3 `add` numeral 2)
 
 example7 :: Term
 example7 = numeral 2 `mul` (numeral 2 `mul` (numeral 2 `mul` (numeral 2 `mul` numeral 2)))
--}
+--}
 
 -- - - - - - - - - - - -- Renaming, substitution, beta-reduction
 
-{-
+--{
 used :: Term -> [Var]
 used (Variable x) = [x]
-used (Lambda x n) = [x] `merge` used n
+used (Lambda x _ n) = [x] `merge` used n
 used (Apply  n m) = used n `merge` used m
 
 
@@ -156,9 +157,9 @@ rename :: Var -> Var -> Term -> Term
 rename x y (Variable z)
     | z == x    = Variable y
     | otherwise = Variable z
-rename x y (Lambda z n)
-    | z == x    = Lambda z n
-    | otherwise = Lambda z (rename x y n)
+rename x y (Lambda z t n)
+    | z == x    = Lambda z t n
+    | otherwise = Lambda z t (rename x y n)
 rename x y (Apply n m) = Apply (rename x y n) (rename x y m)
 
 
@@ -166,37 +167,37 @@ substitute :: Var -> Term -> Term -> Term
 substitute x n (Variable y)
     | x == y    = n
     | otherwise = Variable y
-substitute x n (Lambda y m)
-    | x == y    = Lambda y m
-    | otherwise = Lambda z (substitute x n (rename y z m))
+substitute x n (Lambda y t m)
+    | x == y    = Lambda y t m
+    | otherwise = Lambda z t (substitute x n (rename y z m))
     where z = fresh (used n `merge` used m `merge` [x,y])
 substitute x n (Apply m p) = Apply (substitute x n m) (substitute x n p)
 
 
 beta :: Term -> [Term]
-beta (Apply (Lambda x n) m) =
+beta (Apply (Lambda x t n) m) =
   [substitute x m n] ++
-  [Apply (Lambda x n') m  | n' <- beta n] ++
-  [Apply (Lambda x n)  m' | m' <- beta m]
+  [Apply (Lambda x t n') m  | n' <- beta n] ++
+  [Apply (Lambda x t n)  m' | m' <- beta m]
 beta (Apply n m) =
   [Apply n' m  | n' <- beta n] ++
   [Apply n  m' | m' <- beta m]
-beta (Lambda x n) = [Lambda x n' | n' <- beta n]
+beta (Lambda x t n) = [Lambda x t n' | n' <- beta n]
 beta (Variable _) = []
--}
+--}
 
 -- - - - - - - - - - - -- Normalize
 
-{-
+--{
 normalize :: Term -> IO ()
 normalize m = do
-  print m
+  putStrLn $ show 0 ++ " -- " ++ show m
   let ms = beta m
   if null ms then
     return ()
   else
     normalize (head ms)
--}
+--}
 
 
 ------------------------- Assignment 2: Type checking
