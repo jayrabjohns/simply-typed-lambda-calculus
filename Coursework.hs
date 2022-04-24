@@ -203,13 +203,23 @@ normalize m = do
 ------------------------- Assignment 2: Type checking
 
 
-type Context = ()
+type Context = [(Var,Type)]
 
 typeof :: Context -> Term -> Type
-typeof = undefined
+typeof context (Variable   x) = case (lookup x context) of 
+    Just e  -> e
+    Nothing -> error ("Variable " ++ x ++ " not in context")
+typeof context (Lambda x t m) = (t :-> (typeof ((x,t):context) m))
+typeof context (Apply    n m) = applytypes (typeof context n) (typeof context m) where
+    applytypes :: Type -> Type -> Type
+    applytypes (Base) _         = error ("Expecting ARROW type, but given BASE type")
+    applytypes ((:->) t1 t2) t3 
+        | t1 == t3  = t2 
+        | otherwise = error ("Expecting type " ++ show t1 ++ ", but given type " ++ show t3)
 
 
--- example8 = Lambda "x" Base ((Apply (Apply (Variable "f") (Variable "x")) (Variable "x"))
+
+example8 = Lambda "x" Base ((Apply (Apply (Variable "f") (Variable "x")) (Variable "x")))
 
 
 
