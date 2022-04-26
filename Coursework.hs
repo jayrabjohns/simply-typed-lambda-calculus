@@ -207,15 +207,15 @@ type Context = [(Var,Type)]
 
 typeof :: Context -> Term -> Type
 typeof context (Variable   x) = case (lookup x context) of 
-    Just e  -> e
-    Nothing -> error ("Variable " ++ x ++ " not in context")
+    Just t  -> t
+    Nothing -> error $ "Variable " ++ x ++ " not in context"
 typeof context (Lambda x t m) = (t :-> (typeof ((x,t):context) m))
 typeof context (Apply    n m) = applytypes (typeof context n) (typeof context m) where
     applytypes :: Type -> Type -> Type
-    applytypes (Base) _         = error ("Expecting ARROW type, but given BASE type")
-    applytypes ((:->) t1 t2) t3 
-        | t1 == t3  = t2 
-        | otherwise = error ("Expecting type " ++ show t1 ++ ", but given type " ++ show t3)
+    applytypes (Base) _ = error "Expecting ARROW type, but given BASE type"
+    applytypes ((:->) t1 t2) t3
+        | t1 == t3      = t2 
+        | otherwise     = error $ "Expecting type " ++ show t1 ++ ", but given type " ++ show t3
 
 
 
@@ -239,33 +239,53 @@ fun (Fun f) = f
 
 -- - - - - - - - - - - -- Examples
 
+-- Using lambdas here to mimic intuition from lambda calculus
+
 -- plussix : N -> N
 plussix :: Functional
-plussix = undefined
+plussix = (Fun (\(Num i) -> (Num (i + 6)))) --where
+--     f :: Functional -> Functional
+--     f (Num i) = (Num (i + 6))
 
 -- plus : N -> (N -> N)
 plus :: Functional
-plus = undefined
+plus = (Fun (\(Num i) -> 
+       (Fun (\(Num j) -> (Num (i + j))))))
+-- -- Alternatives
+-- plus = (Fun (\(Num i) -> (Fun (\(Num j) -> (Num (i + j))))))
+-- plus = (Fun f) where
+--   f :: Functional -> Functional
+--   f (Num i) = (Fun g) where
+--     g :: Functional -> Functional
+--     g (Num j) = (Num (i + j))
+
 
 -- twice : (N -> N) -> N -> N
 twice :: Functional
-twice = undefined
+twice = (Fun (\(Fun f) -> 
+        (Fun (\(Num i) -> fun (Fun f) (fun (Fun f) (Num i))))))
+
 
 -- - - - - - - - - - - -- Constructing functionals
 
 dummy :: Type -> Functional
-dummy = undefined
+dummy (Base)        = (Num 0)
+dummy ((:->) t1 t2) = (Fun (\x -> (dummy t2)))
 
 count :: Type -> Functional -> Int
-count = undefined
+count (Base) (Num i)      = i
+count (Base) (Fun _)      = error "Wrong type"
+count ((:->) _ _) (Num _) = error "Wrong type too"
+count ((:->) t1 t2) f     = count t2 (fun f (dummy t1))
 
 increment :: Functional -> Int -> Functional
-increment = undefined
+increment (Num i) n = (Num (i + n))
+increment f n       = (Fun (\x -> (increment (fun f x) n)))
 
 
 ------------------------- Assignment 4 : Counting reduction steps
 
-type Valuation = ()
+type Valuation = [(Var, Functional)]
 
 interpret :: Context -> Valuation -> Term -> Functional
 interpret = undefined
