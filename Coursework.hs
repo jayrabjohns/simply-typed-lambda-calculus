@@ -191,7 +191,7 @@ beta (Variable _) = []
 --{
 normalize :: Term -> IO ()
 normalize m = do
-  putStrLn $ show 0 ++ " -- " ++ show m
+  putStrLn $ show (bound m) ++ " -- " ++ show m
   let ms = beta m
   if null ms then
     return ()
@@ -206,7 +206,7 @@ normalize m = do
 type Context = [(Var,Type)]
 
 typeof :: Context -> Term -> Type
-typeof context (Variable   x) = case (lookup x context) of 
+typeof context (Variable x) = case (lookup x context) of 
     Just t  -> t
     Nothing -> error $ "Variable " ++ x ++ " not in context"
 typeof context (Lambda x t m) = (t :-> (typeof ((x,t):context) m))
@@ -243,21 +243,13 @@ fun (Fun f) = f
 
 -- plussix : N -> N
 plussix :: Functional
-plussix = (Fun (\(Num i) -> (Num (i + 6)))) --where
---     f :: Functional -> Functional
---     f (Num i) = (Num (i + 6))
+plussix = (Fun (\(Num i) -> (Num (i + 6))))
+
 
 -- plus : N -> (N -> N)
 plus :: Functional
 plus = (Fun (\(Num i) -> 
        (Fun (\(Num j) -> (Num (i + j))))))
--- -- Alternatives
--- plus = (Fun (\(Num i) -> (Fun (\(Num j) -> (Num (i + j))))))
--- plus = (Fun f) where
---   f :: Functional -> Functional
---   f (Num i) = (Fun g) where
---     g :: Functional -> Functional
---     g (Num j) = (Num (i + j))
 
 
 -- twice : (N -> N) -> N -> N
@@ -274,8 +266,8 @@ dummy ((:->) t1 t2) = (Fun (\x -> (dummy t2)))
 
 count :: Type -> Functional -> Int
 count (Base) (Num i)      = i
-count (Base) (Fun _)      = error "Wrong type"
-count ((:->) _ _) (Num _) = error "Wrong type too"
+count (Base) (Fun _)      = error "Expecting ARROW type, but given BASE type"
+count ((:->) _ _) (Num _) = error "Expecting BASE type, but given ARROW type"
 count ((:->) t1 t2) f     = count t2 (fun f (dummy t1))
 
 increment :: Functional -> Int -> Functional
@@ -288,8 +280,18 @@ increment f n       = (Fun (\x -> (increment (fun f x) n)))
 type Valuation = [(Var, Functional)]
 
 interpret :: Context -> Valuation -> Term -> Functional
-interpret = undefined
+interpret _ valuation (Variable var) = case (lookup var valuation) of 
+    Just func -> func
+    Nothing   -> error $ "Variable " ++ var ++ " not in valuation"
+interpret context valuation (Lambda x t m)      = (Fun (\g -> (interpret ((x, t):context) ((x, g):valuation) m)))
+interpret context valuation (Apply m n) = increment (fun f g) (1 + count (typeof context n) g) where
+    f :: Functional
+    f = interpret context valuation m
+
+    g :: Functional
+    g = interpret context valuation n
+
 
 bound :: Term -> Int
-bound = undefined
+bound term = count (typeof [] term) (interpret [] [] term)
 
