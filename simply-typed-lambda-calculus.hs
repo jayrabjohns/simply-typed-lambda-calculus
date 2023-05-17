@@ -219,11 +219,11 @@ typeof context (Apply lhs rhs) = applytypes (typeof context lhs) (typeof context
   where
     applytypes :: Type -> Type -> Type
     applytypes Base _ = error "Expecting ARROW type, but given BASE type"
-    applytypes ((:->) lhs rhs) other
+    applytypes (lhs :-> rhs) other
       | lhs == other = rhs
       | otherwise = error $ "Expecting type " ++ show lhs ++ ", but given type " ++ show other
 
-example8 = Lambda "x" Base (Apply (Apply (Variable "f") (Variable "x")) (Variable "x"))
+example8 = Lambda "x" Base (Apply (Apply (Variable "y") (Variable "x")) (Variable "x"))
 
 ------------------------- Assignment 3: Functionals
 
@@ -256,13 +256,13 @@ twice = Fun (\(Fun f) -> Fun (\(Num i) -> f (f (Num i))))
 
 dummy :: Type -> Functional
 dummy Base = Num 0
-dummy ((:->) _ lhs) = Fun (\x -> dummy lhs)
+dummy (_ :-> rhs) = Fun (\x -> dummy rhs)
 
 count :: Type -> Functional -> Int
 count Base (Num i) = i
 count Base (Fun _) = error "Expecting ARROW type, but given BASE type"
-count ((:->) _ _) (Num _) = error "Expecting BASE type, but given ARROW type"
-count ((:->) lhs rhs) (Fun f) = count rhs (f (dummy lhs))
+count (_ :-> _) (Num _) = error "Expecting BASE type, but given ARROW type"
+count (lhs :-> rhs) (Fun f) = count rhs (f (dummy lhs))
 
 increment :: Functional -> Int -> Functional
 increment (Num i) n = Num (i + n)
