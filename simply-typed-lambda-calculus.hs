@@ -25,7 +25,7 @@ removeAll xs ys = [x | x <- xs, x `notElem` ys]
 fresh :: [Var] -> Var
 fresh = head . removeAll variables
 
-------------------------- Assignment 1: Simple types
+------------------------- Simple types
 
 data Type
   = Base
@@ -206,7 +206,7 @@ normalize term = do
     then return ()
     else normalize (head terms)
 
-------------------------- Assignment 2: Type checking
+------------------------- Type checking
 
 type Context = [(Var, Type)]
 
@@ -225,7 +225,7 @@ typeof context (Apply lhs rhs) = applytypes (typeof context lhs) (typeof context
 
 example8 = Lambda "x" Base (Apply (Apply (Variable "y") (Variable "x")) (Variable "x"))
 
-------------------------- Assignment 3: Functionals
+------------------------- Functionals
 
 data Functional
   = Num Int
@@ -268,7 +268,7 @@ increment :: Functional -> Int -> Functional
 increment (Num i) n = Num (i + n)
 increment (Fun f) n = Fun (\x -> increment (f x) n)
 
-------------------------- Assignment 4 : Counting reduction steps
+------------------------- Counting reduction steps
 
 type Valuation = [(Var, Functional)]
 
