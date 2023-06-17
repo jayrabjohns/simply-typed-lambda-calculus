@@ -1,10 +1,6 @@
 # Simply typed lambda calculus
 An implementation of the simply typed λ-calculus in Haskell, along with an illustration that simply-typed terms are strongly normalizing.
 
-Submitted as coursework for `CM20256 Functional Programming` in my second year of study at the University of Bath.
-
-For documentation, see `Spec.pdf`.
-
 ## What's included
 - A way to construct terms in the simlpy typed λ-calculus. This includes `variables`, typed `abstractions`, and `applications`
 - Helper functions for constructing `Church numerals` and corresponding terms for operations such as addition & multiplication
