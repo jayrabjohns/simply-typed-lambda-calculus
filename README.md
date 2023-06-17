@@ -8,7 +8,7 @@ For documentation, see `Spec.pdf`.
 ## What's included
 - A way to construct terms in the simlpy typed λ-calculus. This includes `variables`, typed `abstractions`, and `applications`
 - Helper functions for constructing `Church numerals` and corresponding terms for operations such as addition & multiplication
-- Implementations for `α-conversion, `β-reduction`, normalization, and type checking
+- Implementations for `α-conversion`, `β-reduction`, normalization, and type checking
 - A way to construct higher-order numeric functions (functionals)
 
 The above are combined into a method for calculating the upper bound for the number of reductions for a given term. This is used to show the upper bound decreases with each reduction step and hence illustrates well-typed terms are strongly normalizing.
